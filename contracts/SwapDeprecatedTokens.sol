@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// Swap paused deprecated tokens with new ones, Developed by Laqira Protocol team
 
 pragma solidity ^0.8.0;
 
