@@ -33,8 +33,6 @@ contract SwapDeprecatedTokensV2 {
     function usersTokenSwap() public returns (bool) {
         address _holder = msg.sender; 
         require(!isSwapped(_holder), "User has swapped deprecated tokens already or is not allowed");
-        bool _oldContract_isSwapped = oldContract().isSwapped(_holder);
-        require(!_oldContract_isSwapped, "User has swapped deprecated tokens already in old contract");
         uint256 depTokenBalance = depToken().balanceOf(_holder);
         newToken().transfer(_holder, depTokenBalance);
         userSwapped[_holder] = true;
