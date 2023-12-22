@@ -10,22 +10,22 @@ interface IBEP20 {
 
 contract SwapDeprecatedTokens {
     IBEP20 private immutable _deprecatedTokens;
-    
     IBEP20 private immutable _newTokens;
-    
-    mapping(address => bool) private userSwapped;
-    
     address public owner;
     
-    constructor(IBEP20 deprecatedTokens_, IBEP20 newTokens_) {
+    mapping(address => bool) private userSwapped;
+    mapping(address => bool) private excluded;
+    
+    constructor(IBEP20 deprecatedTokens_, IBEP20 newTokens_, address _owner) {
         _deprecatedTokens = deprecatedTokens_;
         _newTokens = newTokens_;
-        owner = msg.sender;
+        owner = _owner;
     }
     
-    function usersTokenSwap() public returns (bool) {
+    function usersTokenSwap() external returns (bool) {
         address _holder = msg.sender; 
-        require(!isSwapped(_holder), "User has swapped deprecated tokens or is not allowed");
+        require(!isSwapped(_holder), "User has swapped already");
+        require(!isExcluded(_holder), "User has been excluded");
         uint256 depTokenBalance = depToken().balanceOf(_holder);
         newToken().transfer(_holder, depTokenBalance);
         userSwapped[_holder] = true;
@@ -43,18 +43,26 @@ contract SwapDeprecatedTokens {
     function isSwapped(address _holder) public view returns (bool) {
         return userSwapped[_holder];
     }
-    
-    function excludeAddress(address _holder) public onlyOwner {
-        userSwapped[_holder] = true;
+
+    function isExcluded(address _holder) public view returns (bool) {
+        return excluded[_holder];
     }
     
-    function includeAddress(address _holder) public onlyOwner {
-        userSwapped[_holder] = false;
+    function excludeAddress(address _holder) external onlyOwner {
+        excluded[_holder] = true;
     }
     
-    function transferAnyBEP20(address _tokenAddress, address _to, uint256 _amount) public onlyOwner returns (bool) {
+    function includeAddress(address _holder) external onlyOwner {
+        excluded[_holder] = false;
+    }
+    
+    function transferAnyBEP20(address _tokenAddress, address _to, uint256 _amount) external onlyOwner returns (bool) {
         IBEP20(_tokenAddress).transfer(_to, _amount);
         return true;
+    }
+
+    function transferOwnership(address _newOwner) external onlyOwner {
+        owner = _newOwner;
     }
     
     modifier onlyOwner() {
